@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIエージェント セミナー＆デモンストレーション</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&display=swap');
+        
+        body {
+            font-family: 'Zen Maru Gothic', sans-serif;
+            background-color: #F9F6F0; /* 優しいオフホワイト */
+            color: #44403C; /* 濃いストーンカラー */
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        /* チャット風UIのアニメーション */
+        .fade-in-up {
+            animation: fadeInUp 0.5s ease-out forwards;
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ローディングインジケーター */
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: #A8A29E;
+            border-radius: 50%;
+            margin: 0 2px;
+            animation: typing 1.4s infinite ease-in-out both;
+        }
+
+        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+        
+        @keyframes typing {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        .nav-button.active {
+            background-color: #E2A76F; /* 温かみのあるオレンジ/砂色 */
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- プレースホルダー -->
+    <!-- Chosen Palette: Warm Neutrals (Stone/Sand/Off-white) with Gentle Accents (Muted Orange, Sage Green) -->
+    <!-- Application Structure Plan: The SPA is structured as a tabbed presentation tool for a 1-hour seminar. It guides the presenter and audience through logical sections: Introduction, Concept (What is an agent?), Interactive Demos (showing autonomous work), and Conclusion. This non-linear tabbed approach allows flexibility in timing and repeating demos if the audience needs it. -->
+    <!-- Visualization & Content Choices: 
+         - CSS Flexbox diagrams are used to illustrate the AI team concept simply without complex graphics.
+         - A chat-style interface simulates AI agents communicating and working autonomously.
+         - Chart.js (Doughnut and Bar) is used to visually compare human vs. AI speed and show task distribution, making abstract concepts concrete.
+         - Interactions involve clicking "Start" buttons to watch the AI processes unfold step-by-step with delays, mimicking real-time work. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <!-- ヘッダー -->
+    <header class="bg-white shadow-sm py-6 px-4 md:px-8 sticky top-0 z-10">
+        <div class="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <h1 class="text-2xl md:text-3xl font-bold text-[#E2A76F]">✨ 未来のチームメイト：AIエージェント</h1>
+            <p class="text-stone-500 font-medium">就労支援B型事業所 特別セミナー</p>
+        </div>
+    </header>
+
+    <!-- メインコンテンツ -->
+    <main class="flex-grow w-full max-w-5xl mx-auto px-4 py-8 flex flex-col md:flex-row gap-8">
+        
+        <!-- サイドナビゲーション（デスクトップ）/ トップナビ（モバイル） -->
+        <nav class="w-full md:w-64 flex-shrink-0 flex flex-row md:flex-col overflow-x-auto md:overflow-visible gap-2 pb-2">
+            <button onclick="showSection('intro')" id="btn-intro" class="nav-button active whitespace-nowrap md:whitespace-normal text-left px-4 py-3 rounded-xl transition-colors bg-white text-stone-600 hover:bg-stone-100">
+                1. はじめに
+            </button>
+            <button onclick="showSection('concept')" id="btn-concept" class="nav-button whitespace-nowrap md:whitespace-normal text-left px-4 py-3 rounded-xl transition-colors bg-white text-stone-600 hover:bg-stone-100">
+                2. AIエージェントって何？
+            </button>
+            <button onclick="showSection('demo1')" id="btn-demo1" class="nav-button whitespace-nowrap md:whitespace-normal text-left px-4 py-3 rounded-xl transition-colors bg-white text-stone-600 hover:bg-stone-100">
+                3. デモ：自動で企画作り
+            </button>
+            <button onclick="showSection('data')" id="btn-data" class="nav-button whitespace-nowrap md:whitespace-normal text-left px-4 py-3 rounded-xl transition-colors bg-white text-stone-600 hover:bg-stone-100">
+                4. AIの能力を見てみよう
+            </button>
+            <button onclick="showSection('outro')" id="btn-outro" class="nav-button whitespace-nowrap md:whitespace-normal text-left px-4 py-3 rounded-xl transition-colors bg-white text-stone-600 hover:bg-stone-100">
+                5. まとめ・これからの未来
+            </button>
+        </nav>
+
+        <!-- コンテンツ表示エリア -->
+        <div class="flex-grow bg-white rounded-2xl shadow-sm p-6 md:p-10 border border-stone-100 relative min-h-[500px]">
+            
+            <!-- セクション 1: はじめに -->
+            <section id="sec-intro" class="section-content">
+                <div class="mb-8">
+                    <span class="inline-block px-3 py-1 bg-stone-100 text-stone-600 rounded-full text-sm font-bold mb-4">所要時間: 約10分</span>
+                    <h2 class="text-3xl font-bold mb-4 border-b-2 border-[#E2A76F] pb-2 inline-block">皆様、こんにちは！</h2>
+                </div>
+                <p class="text-lg leading-relaxed mb-6">
+                    普段、皆さんはパソコンを使って、AIにお願いして素敵な画像を作ったり、動画を作ったりしていますね。<br>
+                    それは「生成（せいせい）AI」という、とても賢い道具を使っているからです。
+                </p>
+                <div class="bg-stone-50 p-6 rounded-xl mb-6 border-l-4 border-[#789B73]">
+                    <h3 class="text-xl font-bold mb-2">今日のテーマは「AIの進化」です。</h3>
+                    <p>
+                        これまでのAIは、私たちが「これを描いて」と１つお願いしたら、１つ答えを返してくれました。<br>
+                        しかし、最新のAIはさらに進化して、<strong>「AIエージェント」</strong>と呼ばれるようになりました。
+                    </p>
+                </div>
+                <p class="text-lg leading-relaxed">
+                    今日は、この「AIエージェント」がどれくらい賢くて、どんな風に自ら進んでお仕事をしてくれるのか、実際に見ていただきましょう！
+                </p>
+                <div class="mt-8 text-center">
+                    <button onclick="showSection('concept')" class="bg-[#E2A76F] hover:bg-[#d1945c] text-white text-lg font-bold py-3 px-8 rounded-full shadow-md transition-transform hover:scale-105">
+                        次の話へ進む ➔
+                    </button>
+                </div>
+            </section>
+
+            <!-- セクション 2: 概念 -->
+            <section id="sec-concept" class="section-content hidden">
+                <div class="mb-8">
+                    <span class="inline-block px-3 py-1 bg-stone-100 text-stone-600 rounded-full text-sm font-bold mb-4">所要時間: 約10分</span>
+                    <h2 class="text-3xl font-bold mb-4 border-b-2 border-[#E2A76F] pb-2 inline-block">AIエージェントとは？</h2>
+                </div>
+                <p class="text-lg mb-6">
+                    一言でいうと、AIエージェントは<strong>「自分で考えて、協力して動くアシスタントのチーム」</strong>です。
+                </p>
+                
+                <!-- CSSを使った図解 -->
+                <div class="my-10 p-6 bg-stone-50 rounded-xl">
+                    <p class="text-center font-bold mb-6 text-stone-500">【これまでのAI と 新しいAIエージェント の違い】</p>
+                    
+                    <div class="flex flex-col md:flex-row gap-8 justify-center items-center">
+                        <!-- 従来のAI -->
+                        <div class="flex flex-col items-center">
+                            <div class="w-32 h-16 bg-white border-2 border-stone-300 rounded-lg flex items-center justify-center font-bold shadow-sm mb-2">私たち</div>
+                            <div class="text-xl text-stone-400">↓</div>
+                            <div class="text-sm text-stone-500 mb-2">1つ指示を出す</div>
+                            <div class="w-32 h-20 bg-stone-200 rounded-lg flex flex-col items-center justify-center shadow-sm">
+                                <span class="text-2xl mb-1">🤖</span>
+                                <span class="text-sm font-bold">1つのAI</span>
+                            </div>
+                        </div>
+
+                        <div class="hidden md:block text-3xl text-stone-300 font-bold">VS</div>
+                        <div class="md:hidden w-full h-px bg-stone-300 my-4"></div>
+
+                        <!-- AIエージェント -->
+                        <div class="flex flex-col items-center">
+                            <div class="w-32 h-16 bg-[#E2A76F] text-white rounded-lg flex items-center justify-center font-bold shadow-md mb-2">私たち</div>
+                            <div class="text-xl text-[#E2A76F]">↓</div>
+                            <div class="text-sm font-bold text-[#E2A76F] mb-2">大きなお願いをする</div>
+                            
+                            <!-- エージェントチーム -->
+                            <div class="bg-white p-4 rounded-xl border-2 border-[#789B73] shadow-md flex gap-2">
+                                <div class="w-20 h-24 bg-[#eef4ec] rounded flex flex-col items-center justify-center text-center p-1">
+                                    <span class="text-xl mb-1">🔍</span>
+                                    <span class="text-xs font-bold text-[#5a7856]">調べるAI</span>
+                                </div>
+                                <div class="flex items-center text-[#789B73]">↔</div>
+                                <div class="w-20 h-24 bg-[#eef4ec] rounded flex flex-col items-center justify-center text-center p-1">
+                                    <span class="text-xl mb-1">💡</span>
+                                    <span class="text-xs font-bold text-[#5a7856]">考えるAI</span>
+                                </div>
+                                <div class="flex items-center text-[#789B73]">↔</div>
+                                <div class="w-20 h-24 bg-[#eef4ec] rounded flex flex-col items-center justify-center text-center p-1">
+                                    <span class="text-xl mb-1">📝</span>
+                                    <span class="text-xs font-bold text-[#5a7856]">まとめるAI</span>
+                                </div>
+                            </div>
+                            <p class="text-sm mt-2 font-bold text-[#789B73]">AI同士で話し合って仕事を進める！</p>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="text-lg">
+                    例えば、「楽しいお祭りの企画を考えて」と一つお願いするだけで、調べる係、アイデアを出す係、書類にまとめる係のAIたちが、<strong>勝手に話し合って最後まで終わらせてくれます。</strong>
+                </p>
+            </section>
+
+            <!-- セクション 3: デモ -->
+            <section id="sec-demo1" class="section-content hidden flex flex-col h-full">
+                <div class="mb-4">
+                    <span class="inline-block px-3 py-1 bg-stone-100 text-stone-600 rounded-full text-sm font-bold mb-2">所要時間: 約15分</span>
+                    <h2 class="text-3xl font-bold border-b-2 border-[#E2A76F] pb-2 inline-block">デモンストレーション：企画会議</h2>
+                    <p class="mt-2 text-stone-600">私たちが「事業所の新しいイベントを考えて」とお願いした後の、AIエージェント達の頭の中を覗いてみましょう。</p>
+                </div>
+
+                <!-- デモコントローラー -->
+                <div class="bg-stone-50 p-4 rounded-xl flex items-center justify-between mb-4 border border-stone-200">
+                    <div class="font-bold">テーマ：「みんなの特技（画像生成）を活かした楽しいイベント」</div>
+                    <button id="start-demo-btn" onclick="startAgentDemo()" class="bg-[#789B73] hover:bg-[#5a7856] text-white px-6 py-2 rounded-lg font-bold shadow transition-colors flex items-center gap-2">
+                        <span>▶️</span> デモを開始
+                    </button>
+                </div>
+
+                <!-- チャット/作業表示エリア -->
+                <div id="demo-chat-area" class="flex-grow bg-white border-2 border-stone-100 rounded-xl p-4 overflow-y-auto max-h-[400px] flex flex-col gap-3 relative shadow-inner">
+                    <div class="text-center text-stone-400 mt-10" id="demo-placeholder">
+                        上の「デモを開始」ボタンを押してください。<br>AIたちの作業が始まります。
+                    </div>
+                    <!-- JSでここに要素が追加される -->
+                </div>
+                
+                <!-- 処理中インジケーター（初期非表示） -->
+                <div id="typing-container" class="hidden mt-2 ml-4 flex items-center text-stone-500 text-sm">
+                    <span id="typing-name" class="font-bold mr-2">AI</span>が作業中
+                    <div class="typing-indicator ml-2"><span></span><span></span><span></span></div>
+                </div>
+            </section>
+
+            <!-- セクション 4: データ・グラフ -->
+            <section id="sec-data" class="section-content hidden">
+                <div class="mb-6">
+                    <span class="inline-block px-3 py-1 bg-stone-100 text-stone-600 rounded-full text-sm font-bold mb-2">所要時間: 約10分</span>
+                    <h2 class="text-3xl font-bold border-b-2 border-[#E2A76F] pb-2 inline-block">AIエージェントの凄さをグラフで見る</h2>
+                    <p class="mt-2 text-stone-600">先ほどのデモで、AIたちがどのように役割分担し、どれくらい早く作業したのか見てみましょう。</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- グラフ1: 役割分担 -->
+                    <div class="bg-stone-50 p-6 rounded-xl border border-stone-200">
+                        <h3 class="text-center font-bold text-lg mb-4 text-stone-700">チームの役割分担（作業量）</h3>
+                        <div class="chart-container h-48 sm:h-64">
+                            <canvas id="taskChart"></canvas>
+                        </div>
+                        <p class="text-sm text-stone-600 mt-4 text-center">
+                            3つのAIが、得意なことを分担して協力し合っています。一人に負担が集中しません。
+                        </p>
+                    </div>
+
+                    <!-- グラフ2: 速度比較 -->
+                    <div class="bg-stone-50 p-6 rounded-xl border border-stone-200">
+                        <h3 class="text-center font-bold text-lg mb-4 text-stone-700">企画書ができるまでの時間</h3>
+                        <div class="chart-container h-48 sm:h-64">
+                            <canvas id="speedChart"></canvas>
+                        </div>
+                        <p class="text-sm text-stone-600 mt-4 text-center">
+                            人間がゼロから調べて書くと数時間かかる作業も、AIエージェントなら数分（デモでは数秒！）で土台を作ってくれます。
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- セクション 5: まとめ -->
+            <section id="sec-outro" class="section-content hidden text-center">
+                <div class="mb-8">
+                    <span class="inline-block px-3 py-1 bg-stone-100 text-stone-600 rounded-full text-sm font-bold mb-4">所要時間: 約15分</span>
+                    <h2 class="text-3xl font-bold mb-4 border-b-2 border-[#E2A76F] pb-2 inline-block">まとめ：AIと一緒に働く未来</h2>
+                </div>
+                
+                <div class="text-xl leading-loose mb-10 max-w-2xl mx-auto text-left bg-stone-50 p-8 rounded-2xl border-2 border-[#E2A76F]">
+                    <ul class="list-none space-y-4">
+                        <li class="flex items-start">
+                            <span class="text-2xl mr-3">✅</span>
+                            <span>AIは「１つの道具」から、<strong class="text-[#E2A76F]">「頼れるチームメイト」</strong>に進化しています。</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-2xl mr-3">✅</span>
+                            <span>皆さんがやっている「画像作り」も、エージェントにお願いすれば、物語付きの絵本にまとめてくれるかもしれません。</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-2xl mr-3">✅</span>
+                            <span>大切なのは、<strong>AIに「何をしてもらいたいか」を考える皆さんのアイデア</strong>です！</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <p class="text-2xl font-bold text-[#789B73] mb-8">
+                    これからは、AIに面倒な作業を任せて、<br>皆さんはもっと「楽しいこと」「得意なこと」に集中できます！
+                </p>
+
+                <div class="p-6 bg-white border border-stone-200 rounded-xl inline-block shadow-sm">
+                    <h3 class="font-bold text-lg mb-2">Q&A コーナー</h3>
+                    <p class="text-stone-600">わからないこと、AIに聞いてみたいことはありますか？<br>なんでも気軽に質問してください。</p>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <footer class="bg-stone-800 text-stone-300 py-6 text-center mt-auto">
+        <p class="text-sm">© 2026 AI Agent Seminar for Support Facilities. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // === 1. ナビゲーションとタブ切り替えロジック ===
+        function showSection(sectionId) {
+            // 全セクションを非表示
+            document.querySelectorAll('.section-content').forEach(el => {
+                el.classList.add('hidden');
+            });
+            // 全ボタンのアクティブ状態を解除
+            document.querySelectorAll('.nav-button').forEach(el => {
+                el.classList.remove('active', 'bg-[#E2A76F]', 'text-white', 'font-bold', 'shadow-md');
+                el.classList.add('bg-white', 'text-stone-600');
+            });
+
+            // 選択されたセクションを表示
+            document.getElementById('sec-' + sectionId).classList.remove('hidden');
+            
+            // 選択されたボタンをアクティブに
+            const btn = document.getElementById('btn-' + sectionId);
+            btn.classList.remove('bg-white', 'text-stone-600');
+            btn.classList.add('active', 'bg-[#E2A76F]', 'text-white', 'font-bold', 'shadow-md');
+
+            // データセクションが開かれたらチャートを描画（初回のみアニメーション）
+            if (sectionId === 'data') {
+                initCharts();
+            }
+        }
+
+        // === 2. デモンストレーション（チャットUI）ロジック ===
+        const demoSteps = [
+            { type: 'system', text: '【指示を受信しました】イベント企画の立案を開始します。', delay: 1000 },
+            { type: 'researcher', name: '🔍 リサーチャーAI', text: 'インターネットで最近の障害者支援施設での人気イベントを検索しています...', delay: 2500 },
+            { type: 'researcher', name: '🔍 リサーチャーAI', text: '情報が集まりました。最近は「参加型」「デジタルの活用」「作品展示」が喜ばれる傾向にあります。', delay: 2000 },
+            { type: 'planner', name: '💡 プランナーAI', text: 'その情報と、皆さんの普段の「生成AIを使った画像作成」の特技を組み合わせましょう。', delay: 2500 },
+            { type: 'planner', name: '💡 プランナーAI', text: '企画案：『みんなで作る！AIデジタルアート展覧会』はどうでしょう？タブレットでその場で絵を生成する体験コーナーも設けます。', delay: 3000 },
+            { type: 'manager', name: '📝 マネージャーAI', text: '素晴らしいアイデアです。実現可能かスケジュールと必要なものをリストアップし、企画書にまとめます。', delay: 3000 },
+            { type: 'document', text: '📄 【企画書】AIデジタルアート展覧会<br>・日時：来月末<br>・場所：事業所内ホール<br>・担当：画像生成チーム（展示）、体験サポートチーム', delay: 2000 },
+            { type: 'system', text: '✅ すべての作業が完了しました。人間（あなた）の確認を待っています。', delay: 1000 }
+        ];
+
+        let isDemoRunning = false;
+
+        async function startAgentDemo() {
+            if (isDemoRunning) return;
+            isDemoRunning = true;
+            
+            const btn = document.getElementById('start-demo-btn');
+            btn.disabled = true;
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+            btn.innerHTML = '処理中...';
+
+            const chatArea = document.getElementById('demo-chat-area');
+            const placeholder = document.getElementById('demo-placeholder');
+            const typingContainer = document.getElementById('typing-container');
+            const typingName = document.getElementById('typing-name');
+
+            if (placeholder) placeholder.style.display = 'none';
+            chatArea.innerHTML = ''; // クリア
+
+            for (let i = 0; i < demoSteps.length; i++) {
+                const step = demoSteps[i];
+                
+                // 次の人が考え中...の表示
+                if (step.name) {
+                    typingName.textContent = step.name;
+                    typingContainer.classList.remove('hidden');
+                    chatArea.appendChild(typingContainer); // 常に一番下へ移動
+                    chatArea.scrollTop = chatArea.scrollHeight;
+                }
+
+                // 指定時間待機
+                await new Promise(resolve => setTimeout(resolve, step.delay));
+                
+                typingContainer.classList.add('hidden');
+
+                // メッセージ要素の作成
+                const msgDiv = document.createElement('div');
+                msgDiv.className = 'fade-in-up p-3 rounded-xl max-w-[85%] relative';
+                
+                if (step.type === 'system') {
+                    msgDiv.className += ' bg-stone-200 text-stone-600 text-sm text-center mx-auto w-full';
+                    msgDiv.innerHTML = `<strong>${step.text}</strong>`;
+                } else if (step.type === 'document') {
+                    msgDiv.className += ' bg-white border-2 border-stone-800 text-stone-800 shadow-lg mx-auto w-full md:w-3/4 p-4 font-serif';
+                    msgDiv.innerHTML = step.text;
+                } else {
+                    let colorClass = '';
+                    let alignClass = 'mr-auto'; // 左寄せデフォルト
+                    
+                    if (step.type === 'researcher') colorClass = 'bg-blue-50 border border-blue-200 text-blue-900';
+                    if (step.type === 'planner') { colorClass = 'bg-green-50 border border-green-200 text-green-900'; alignClass = 'ml-auto'; } // 右寄せ
+                    if (step.type === 'manager') { colorClass = 'bg-orange-50 border border-orange-200 text-orange-900'; alignClass = 'mx-auto'; } // 中央
+                    
+                    msgDiv.className += ` ${colorClass} ${alignClass}`;
+                    msgDiv.innerHTML = `<div class="text-xs font-bold mb-1 opacity-70">${step.name}</div><div>${step.text}</div>`;
+                }
+
+                chatArea.appendChild(msgDiv);
+                chatArea.scrollTop = chatArea.scrollHeight; // スクロールを下へ
+            }
+
+            // 終了処理
+            btn.innerHTML = '<span>🔄</span> もう一度見る';
+            btn.disabled = false;
+            btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            isDemoRunning = false;
+        }
+
+        // === 3. Chart.js ロジック ===
+        let chartsInitialized = false;
+
+        function initCharts() {
+            if (chartsInitialized) return;
+
+            // 共通オプション設定
+            Chart.defaults.font.family = "'Zen Maru Gothic', sans-serif";
+            Chart.defaults.color = '#57534E';
+
+            // 円グラフ（役割分担）
+            const ctxTask = document.getElementById('taskChart').getContext('2d');
+            new Chart(ctxTask, {
+                type: 'doughnut',
+                data: {
+                    labels: ['リサーチ (情報収集)', 'プランニング (アイデア)', 'マネジメント (まとめ)'],
+                    datasets: [{
+                        data: [35, 45, 20],
+                        backgroundColor: [
+                            '#93C5FD', // Blue
+                            '#86EFAC', // Green
+                            '#FDBA74'  // Orange
+                        ],
+                        borderWidth: 0,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.label + ': 約' + context.raw + '%の作業を担当';
+                                }
+                            }
+                        }
+                    },
+                    cutout: '60%'
+                }
+            });
+
+            // 棒グラフ（速度比較）
+            const ctxSpeed = document.getElementById('speedChart').getContext('2d');
+            new Chart(ctxSpeed, {
+                type: 'bar',
+                data: {
+                    labels: ['人間（私たち）', 'これまでのAI', 'AIエージェント'],
+                    datasets: [{
+                        label: '企画書完成までの時間',
+                        data: [120, 30, 5], // 仮想の分数
+                        backgroundColor: [
+                            '#D6D3D1', // Stone (Human)
+                            '#A8A29E', // Darker Stone (Old AI)
+                            '#E2A76F'  // Highlight Orange (Agent)
+                        ],
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: '時間（分）' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.raw + ' 分かかります';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            chartsInitialized = true;
+        }
+
+    </script>
+</body>
+</html>
